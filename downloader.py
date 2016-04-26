@@ -85,14 +85,21 @@ class downloader:
         self._imap.logout()
         self._imap = None
         
-    def search(self, sender = ''):
+    def search(self, keyWord = '', gmail = True):
         '''
-        search in email based on sender's name (not case sensitive), such as IPC Support Team, Jason Kreuter
+        If gmail is true, it will use a gmail_search instead of simple search.
+        This gmail_search will behave like the search in the web side.
+        If gmail is false, keyWord much be a search string.
+            '(FROM "Sender Name")' '(Unseen)' 'CC "CC Name")' 
+            'Body "word in body"' '(Since "date only string")'
+            https://tools.ietf.org/html/rfc3501.html#section-6.4.4
         return a list of mail id, larger id is for newer email
         '''
-        if sender:
-            self._search = '(FROM "{0}")'.format(str(sender))
-        result, emailIndex = self._imap.search(None, self._search)
+        self._search = keyWord
+        if gmail:
+            result, emailIndex = self._imap.gmail_search(None, self._search)
+        else:
+            result, emailIndex = self._imap.search(None, self._search)
         assert result == 'OK', 'unable to search for {0}'.format(self._search)
         return [id for id in reversed(emailIndex[0].split())]
         
