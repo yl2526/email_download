@@ -87,6 +87,23 @@ class downloader:
         self._imap.close()
         self._imap.logout()
         self._imap = None
+    
+    
+    def changeFolder(self, folder, reconnect = True):
+        '''
+        change the folder of connection
+        in case failed to connect to the new folder, 
+        if reconnect is true, it will try to reselect the old folder
+        '''
+        result, detail = self._imap.select(folder)
+        if result == 'OK':
+            self._folder = folder
+        else:
+            print 'unable to select the {0} folder\nError: {1}'.format(folder, detail)
+            if reconnect:
+                result, _ = self._imap.select(self._folder)
+                assert result == 'OK', 'unable to reselect old {0} folder'.format(self._folder)
+                print 'reconnected to {0} folder'.format(self._folder)
         
     def search(self, keyWord = '', gmail = None):
         '''
