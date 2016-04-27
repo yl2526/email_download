@@ -56,6 +56,12 @@ class downloader:
         self._folder = folder
         result, _ = self._imap.select(folder)
         assert (result == 'OK'), 'unable to select the {0} folder'.format(folder)
+    
+    def __repr__(self):
+        '''
+        the general representaiton
+        '''
+        return "User: {0} Server: {1} Folder: {2}".format(self._username, self._server, self._folder)
 
     def __str__(self):
         '''
@@ -65,16 +71,13 @@ class downloader:
         description += 'Currently loged in as {0}\n'.format(self._username)
         description += 'Currently slecting the {0} folder\n'.format(self._folder)
         description += 'Restricted by search rules: {0}\n'.format(self._search)
-        if isinstance(self._target, list):
+        if self._target == 'All':
+            description += 'Targeting all attachments'
+        else:
             if self._target:
                 description += 'With following specific target\n {0}'.format([str(target) for target in self._target])
             else:
                 description += 'With no target\n'
-        elif self._target == 'All':
-            description += 'Targeting all attachments'
-        
-        else:
-            raise Exception('invalid target format, must be All or a list')
         return description
     
     def close(self):
@@ -85,7 +88,7 @@ class downloader:
         self._imap.logout()
         self._imap = None
         
-    def search(self, keyWord = '', gmail = True):
+    def search(self, keyWord = '', gmail = None):
         '''
         If gmail is true, it will use a gmail_search instead of simple search.
         This gmail_search will behave like the search in the web side.
@@ -93,9 +96,15 @@ class downloader:
             '(FROM "Sender Name")' '(Unseen)' 'CC "CC Name")' 
             'Body "word in body"' '(Since "date only string")'
             https://tools.ietf.org/html/rfc3501.html#section-6.4.4
+        If gmail is None, it will try to check if server is imap.gmail.com.
         return a list of mail id, larger id is for newer email
         '''
         self._search = keyWord
+        if gmail is None:
+            if self._server == 'imap.gmail.com':
+                gmail = True
+            else:
+                gmail = False
         if gmail:
             result, emailIndex = self._imap.gmail_search(None, self._search)
         else:
